@@ -1,0 +1,56 @@
+version: "3.8"
+
+# Variante para Portainer conectado a um Docker Swarm.
+# A imagem da API é criada pelo GitHub Actions e informada em CATALOG_API_IMAGE.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-catalog}
+      POSTGRES_USER: ${POSTGRES_USER:-catalog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - catalog-postgres:/var/lib/postgresql/data
+    configs:
+      - source: catalog-init
+        target: /docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-catalog} -d ${POSTGRES_DB:-catalog}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+  catalog-api:
+    image: ${CATALOG_API_IMAGE}
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-catalog}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-catalog}
+      API_KEY: ${CATALOG_API_KEY}
+      PORT: 3000
+      SYNC_INTERVAL_HOURS: ${SYNC_INTERVAL_HOURS:-6}
+      CADABRA_XML_URL: ${CADABRA_XML_URL:-https://abramais2.vtexcommercestable.com.br/XMLData/xml_Sellbie.xml}
+      ABRA_CASA_XML_URL: ${ABRA_CASA_XML_URL:-https://novaabracasa.vtexcommercestable.com.br/XMLData/Criteo-default.xml}
+    ports:
+      - target: 3000
+        published: ${CATALOG_PORT:-3000}
+        protocol: tcp
+        mode: ingress
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+volumes:
+  catalog-postgres:
+
+configs:
+  catalog-init:
+    file: ./db/init.sql

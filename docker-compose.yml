@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-catalog}
+      POSTGRES_USER: ${POSTGRES_USER:-catalog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - catalog-postgres:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-catalog} -d ${POSTGRES_DB:-catalog}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  catalog-api:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-catalog}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-catalog}
+      API_KEY: ${CATALOG_API_KEY}
+      PORT: 3000
+      SYNC_INTERVAL_HOURS: ${SYNC_INTERVAL_HOURS:-6}
+      CADABRA_XML_URL: ${CADABRA_XML_URL:-https://abramais2.vtexcommercestable.com.br/XMLData/xml_Sellbie.xml}
+      ABRA_CASA_XML_URL: ${ABRA_CASA_XML_URL:-https://novaabracasa.vtexcommercestable.com.br/XMLData/Criteo-default.xml}
+    depends_on:
+      - postgres
+    ports:
+      - "${CATALOG_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  catalog-postgres:
