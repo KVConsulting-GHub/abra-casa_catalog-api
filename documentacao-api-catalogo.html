@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentação — API de Catálogo VTEX</title>
+  <style>
+    :root { --ink:#172033; --muted:#596579; --line:#dfe5ee; --paper:#fff; --canvas:#f5f7fb; --blue:#246bfe; --navy:#101a31; --green:#11845b; --amber:#bd6a00; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--canvas); font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.55; }
+    .hero { background:linear-gradient(125deg,#101a31,#172c59 58%,#2456a6); color:#fff; padding:64px max(24px,calc((100vw - 1120px)/2)); }
+    .hero p { max-width:700px; color:#dce7ff; font-size:1.1rem; }
+    .tag { display:inline-block; border:1px solid #8fb1ff; border-radius:999px; padding:4px 10px; font-size:.8rem; color:#dce7ff; letter-spacing:.02em; }
+    h1 { font-size:clamp(2.1rem,5vw,3.6rem); line-height:1.05; margin:14px 0; letter-spacing:-.04em; }
+    h2 { margin:0 0 18px; font-size:1.55rem; letter-spacing:-.025em; }
+    h3 { margin:28px 0 10px; font-size:1.1rem; }
+    main { max-width:1120px; margin:0 auto; padding:34px 24px 60px; }
+    nav { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:28px; }
+    nav a { color:#174cae; background:#e8f0ff; border-radius:999px; padding:7px 12px; font-size:.9rem; text-decoration:none; }
+    section { background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:28px; margin:18px 0; box-shadow:0 3px 12px rgba(16,26,49,.035); }
+    code { font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace; font-size:.9em; background:#eef2f8; border-radius:4px; padding:2px 5px; }
+    pre { margin:14px 0; overflow:auto; background:var(--navy); color:#e9f1ff; border-radius:12px; padding:18px; line-height:1.5; font-size:.86rem; }
+    pre code { padding:0; background:transparent; color:inherit; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .card { border:1px solid var(--line); border-radius:12px; padding:17px; }
+    .method { display:inline-block; min-width:45px; text-align:center; font-size:.75rem; font-weight:800; letter-spacing:.04em; border-radius:5px; padding:3px 6px; color:#fff; background:var(--green); margin-right:7px; }
+    .post { background:var(--amber); }
+    .path { font-family:"SFMono-Regular",Consolas,monospace; font-weight:700; word-break:break-word; }
+    table { width:100%; border-collapse:collapse; font-size:.94rem; }
+    th,td { border-bottom:1px solid var(--line); padding:10px 8px; text-align:left; vertical-align:top; }
+    th { color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; }
+    .note { border-left:4px solid var(--blue); background:#edf3ff; padding:14px 16px; border-radius:0 10px 10px 0; }
+    .warn { border-left-color:#dc8b00; background:#fff7e8; }
+    .ok { border-left-color:var(--green); background:#eaf8f2; }
+    footer { text-align:center; color:var(--muted); font-size:.87rem; padding:12px; }
+    @media (max-width:700px) { .hero { padding:46px 24px; } section { padding:20px; } .grid { grid-template-columns:1fr; } table { display:block; overflow:auto; } }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <span class="tag">CATÁLOGO • VTEX • N8N</span>
+    <h1>API de consulta ao catálogo</h1>
+    <p>Camada rápida para localizar produtos por nome, categoria, cor, marca, EAN/GTIN ou SKU antes de consultar a VTEX para preço e disponibilidade em tempo real.</p>
+  </header>
+
+  <main>
+    <nav>
+      <a href="#visao">Visão geral</a><a href="#autenticacao">Autenticação</a><a href="#rotas">Rotas</a><a href="#busca">Busca</a><a href="#n8n">n8n</a><a href="#operacao">Operação</a>
+    </nav>
+
+    <section id="visao">
+      <h2>Visão geral</h2>
+      <p>A API mantém um índice local de dois XMLs públicos da VTEX e o atualiza automaticamente. O índice contém somente dados estáveis de produto — nome, descrição, categoria, marca, cor, EAN/GTIN, MPN, SKU e URLs.</p>
+      <div class="note warn"><strong>Importante:</strong> não use esta API para informar preço, promoção, parcelamento ou estoque ao cliente. Depois de encontrar o <code>sku_id</code>, consulte a API da VTEX para confirmar os dados comerciais.</div>
+      <h3>Fluxo recomendado</h3>
+      <pre><code>Pergunta do cliente → API de catálogo → sku_id encontrado → API VTEX → resposta final</code></pre>
+    </section>
+
+    <section id="autenticacao">
+      <h2>Endereço e autenticação</h2>
+      <p>Substitua <code>SEU_HOST</code> pelo IP, domínio ou endereço HTTPS publicado da API.</p>
+      <pre><code>Base URL: http://SEU_HOST:3000
+Authorization: Bearer SUA_CATALOG_API_KEY</code></pre>
+      <div class="note"><strong>Exceção:</strong> <code>/health</code> é público. Todas as outras rotas exigem o cabeçalho <code>Authorization</code>.</div>
+    </section>
+
+    <section id="rotas">
+      <h2>Rotas disponíveis</h2>
+      <div class="grid">
+        <div class="card"><span class="method">GET</span><span class="path">/health</span><p>Status da API e total de produtos ativos. Sem autenticação.</p></div>
+        <div class="card"><span class="method">GET</span><span class="path">/catalog/categories</span><p>Lista categorias e quantidade de produtos em cada uma.</p></div>
+        <div class="card"><span class="method">GET</span><span class="path">/catalog/search</span><p>Pesquisa textual e filtros combináveis.</p></div>
+        <div class="card"><span class="method">GET</span><span class="path">/catalog/products/{sku_id}</span><p>Retorna um produto pelo SKU.</p></div>
+        <div class="card"><span class="method post">POST</span><span class="path">/admin/sync</span><p>Dispara sincronização manual dos XMLs.</p></div>
+      </div>
+    </section>
+
+    <section id="busca">
+      <h2>Pesquisa de produtos</h2>
+      <p><span class="method">GET</span><span class="path">/catalog/search</span></p>
+      <table>
+        <thead><tr><th>Parâmetro</th><th>Uso</th><th>Exemplo</th></tr></thead>
+        <tbody>
+          <tr><td><code>q</code></td><td>Nome, descrição e termos de busca.</td><td><code>cadeira escritório giratória</code></td></tr>
+          <tr><td><code>category</code></td><td>Parte do nome da categoria.</td><td><code>Cadeiras</code></td></tr>
+          <tr><td><code>color</code></td><td>Parte do nome da cor.</td><td><code>preto</code></td></tr>
+          <tr><td><code>brand</code></td><td>Parte do nome da marca.</td><td><code>Abra Casa</code></td></tr>
+          <tr><td><code>gtin</code></td><td>EAN/GTIN exato.</td><td><code>7898599220281</code></td></tr>
+          <tr><td><code>sku_id</code></td><td>SKU exato.</td><td><code>2000218</code></td></tr>
+          <tr><td><code>source</code></td><td>Origem: <code>abra_casa</code> ou <code>cadabra</code>.</td><td><code>abra_casa</code></td></tr>
+          <tr><td><code>limit</code></td><td>Quantidade de resultados, entre 1 e 20.</td><td><code>5</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Exemplo: cadeiras pretas</h3>
+      <pre><code>curl -G "http://SEU_HOST:3000/catalog/search" \
+  -H "Authorization: Bearer SUA_CATALOG_API_KEY" \
+  --data-urlencode "q=cadeira" \
+  --data-urlencode "color=preto" \
+  --data-urlencode "limit=5"</code></pre>
+
+      <h3>Exemplo de resposta</h3>
+      <pre><code>{
+  "count": 1,
+  "items": [
+    {
+      "id": "abra_casa:2000218",
+      "source": "abra_casa",
+      "sku_id": "2000218",
+      "item_group_id": "2000166",
+      "name": "Cadeira Eames Eiffel Base Madeira - Preto",
+      "description": "...",
+      "brand": "Abra Casa",
+      "category": "Cadeiras, Bancos e Banquetas",
+      "color": "preto",
+      "gtin": "7898599220281",
+      "mpn": "1569949ki",
+      "product_url": "https://...",
+      "image_url": "https://...",
+      "score": 0.42
+    }
+  ]
+}</code></pre>
+      <div class="note ok"><strong>Uso do score:</strong> quanto maior, melhor a correspondência textual. Trate-o apenas como ordenação; não o apresente ao cliente.</div>
+    </section>
+
+    <section>
+      <h2>Categorias, SKU e saúde</h2>
+      <h3>Listar categorias</h3>
+      <pre><code>GET /catalog/categories</code></pre>
+      <h3>Buscar diretamente por SKU</h3>
+      <pre><code>GET /catalog/products/2000218</code></pre>
+      <h3>Verificar a sincronização</h3>
+      <pre><code>GET /health
+
+{
+  "status": "ok",
+  "products": 1800,
+  "updated_at": "2026-07-15T14:42:30.397Z"
+}</code></pre>
+    </section>
+
+    <section id="n8n">
+      <h2>Configuração sugerida no n8n</h2>
+      <p>Crie uma ferramenta HTTP para o agente chamar antes da VTEX.</p>
+      <table>
+        <tbody>
+          <tr><th>Método</th><td><code>GET</code></td></tr>
+          <tr><th>URL</th><td><code>http://SEU_HOST:3000/catalog/search</code></td></tr>
+          <tr><th>Header</th><td><code>Authorization: Bearer SUA_CATALOG_API_KEY</code></td></tr>
+          <tr><th>Query parameters</th><td><code>q</code>, <code>category</code>, <code>color</code>, <code>brand</code>, <code>gtin</code>, <code>sku_id</code>, <code>limit</code></td></tr>
+        </tbody>
+      </table>
+      <h3>Instrução para o agente</h3>
+      <pre><code>Ao receber uma pergunta sobre produtos, consulte primeiro a ferramenta de catálogo.
+Extraia o tipo de produto, categoria, cor, marca, EAN ou SKU quando disponíveis.
+Use o sku_id retornado para consultar a VTEX e obter preço, estoque e prazo atuais.
+Não invente produtos, atributos ou dados comerciais. Retorne no máximo cinco opções.</code></pre>
+    </section>
+
+    <section id="operacao">
+      <h2>Atualização e operação</h2>
+      <ul>
+        <li>A sincronização ocorre automaticamente a cada <code>SYNC_INTERVAL_HOURS</code> (padrão: 6 horas).</li>
+        <li>Para atualizar agora, envie <code>POST /admin/sync</code> com o mesmo cabeçalho de autenticação.</li>
+        <li>Se uma sincronização falhar, o catálogo ativo anterior continua disponível.</li>
+        <li>Para uso externo ou no n8n, publique a API atrás de HTTPS usando seu proxy reverso.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>Documentação da API de Catálogo VTEX • Gerada em 15/07/2026</footer>
+</body>
+</html>
