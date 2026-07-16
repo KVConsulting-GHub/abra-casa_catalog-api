@@ -29,13 +29,14 @@ async function handler(request, response) {
     return json(response, 200, { items: result.rows });
   }
   if (request.method === "GET" && url.pathname === "/catalog/search") {
-    const q = url.searchParams.get("q") || "";
-    const source = url.searchParams.get("source");
-    const category = url.searchParams.get("category");
-    const brand = url.searchParams.get("brand");
-    const color = url.searchParams.get("color");
-    const gtin = url.searchParams.get("gtin");
-    const sku = url.searchParams.get("sku_id");
+    const param = name => url.searchParams.get(name)?.trim() || null;
+    const q = param("q") || "";
+    const source = param("source");
+    const category = param("category");
+    const brand = param("brand");
+    const color = param("color");
+    const gtin = param("gtin");
+    const sku = param("sku_id");
     const skip = offset(url.searchParams.get("offset"));
     const result = await pool.query(`SELECT id,source,sku_id,item_group_id,name,description,brand,category,color,gtin,mpn,product_url,image_url,
       CASE WHEN $1 <> '' THEN ts_rank_cd(search_vector, websearch_to_tsquery('portuguese',$1)) ELSE 0 END AS score,
