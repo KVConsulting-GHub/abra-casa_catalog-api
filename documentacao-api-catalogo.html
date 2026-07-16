@@ -45,12 +45,12 @@
 
   <main>
     <nav>
-      <a href="#visao">Visão geral</a><a href="#autenticacao">Autenticação</a><a href="#rotas">Rotas</a><a href="#busca">Busca</a><a href="#n8n">n8n</a><a href="#operacao">Operação</a>
+      <a href="#visao">Visão geral</a><a href="#autenticacao">Autenticação</a><a href="#rotas">Rotas</a><a href="#busca">Busca</a><a href="#links">Links</a><a href="#n8n">n8n</a><a href="#configuracao">Configuração</a><a href="#operacao">Operação</a>
     </nav>
 
     <section id="visao">
       <h2>Visão geral</h2>
-      <p>A API mantém um índice local de dois XMLs públicos da VTEX e o atualiza automaticamente. O índice contém somente dados estáveis de produto — nome, descrição, categoria, marca, cor, EAN/GTIN, MPN, SKU e URLs.</p>
+      <p>A API mantém um índice local de dois XMLs públicos da VTEX — um por loja (<code>abra_casa</code> e <code>cadabra</code>) — e o atualiza automaticamente. O índice contém somente dados estáveis de produto — nome, descrição, categoria, marca, cor, EAN/GTIN, MPN, SKU e URLs. Os links de produto são reescritos para o domínio público da loja durante a importação.</p>
       <div class="note warn"><strong>Importante:</strong> não use esta API para informar preço, promoção, parcelamento ou estoque ao cliente. Depois de encontrar o <code>sku_id</code>, consulte a API da VTEX para confirmar os dados comerciais.</div>
       <h3>Fluxo recomendado</h3>
       <pre><code>Pergunta do cliente → API de catálogo → sku_id encontrado → API VTEX → resposta final</code></pre>
@@ -115,8 +115,8 @@ Authorization: Bearer SUA_CATALOG_API_KEY</code></pre>
       "color": "preto",
       "gtin": "7898599220281",
       "mpn": "1569949ki",
-      "product_url": "https://...",
-      "image_url": "https://...",
+      "product_url": "https://www.abracasa.com.br/cadeira-eames-eiffel-base-madeira-preto/p?idsku=2000218",
+      "image_url": "https://abracasa.vteximg.com.br/arquivos/ids/180728",
       "score": 0.42
     }
   ]
@@ -140,6 +140,15 @@ Authorization: Bearer SUA_CATALOG_API_KEY</code></pre>
 }</code></pre>
     </section>
 
+    <section id="links">
+      <h2>Links de produto</h2>
+      <p>Os feeds XML da VTEX trazem links com o domínio interno da plataforma (<code>*.vtexcommercestable.com.br</code>) e parâmetros de rastreamento (<code>utm_*</code>). Durante a importação, o link de produto é reescrito para o domínio público da loja, preservando apenas o parâmetro <code>idsku</code>:</p>
+      <pre><code>No feed:  https://novaabracasa.vtexcommercestable.com.br/cadeira-madrid.../p?idsku=2000237&amp;utm_source=criteo&amp;utm_campaign=cpc
+Na API:   https://www.abracasa.com.br/cadeira-madrid.../p?idsku=2000237</code></pre>
+      <p>O domínio público é configurado por loja com <code>ABRA_CASA_SITE_URL</code> e <code>CADABRA_SITE_URL</code> (veja <a href="#configuracao">Configuração</a>). Os links de imagem não são alterados.</p>
+      <div class="note ok"><strong>Pode apresentar ao cliente:</strong> o <code>product_url</code> já sai pronto para compartilhamento, sem domínio interno nem parâmetros de campanha.</div>
+    </section>
+
     <section id="n8n">
       <h2>Configuração sugerida no n8n</h2>
       <p>Crie uma ferramenta HTTP para o agente chamar antes da VTEX.</p>
@@ -158,6 +167,25 @@ Use o sku_id retornado para consultar a VTEX e obter preço, estoque e prazo atu
 Não invente produtos, atributos ou dados comerciais. Retorne no máximo cinco opções.</code></pre>
     </section>
 
+    <section id="configuracao">
+      <h2>Configuração (variáveis de ambiente)</h2>
+      <p>Definidas no <code>.env</code> da stack ou na tela <em>Environment variables</em> do Portainer. Cada loja tem sua URL de XML e seu domínio público.</p>
+      <table>
+        <thead><tr><th>Variável</th><th>Uso</th><th>Padrão</th></tr></thead>
+        <tbody>
+          <tr><td><code>ABRA_CASA_XML_URL</code></td><td>URL do XML da loja Abra Casa.</td><td><code>https://novaabracasa.vtexcommercestable.com.br/XMLData/Criteo-default.xml</code></td></tr>
+          <tr><td><code>CADABRA_XML_URL</code></td><td>URL do XML da loja Cadabra.</td><td><code>https://abramais2.vtexcommercestable.com.br/XMLData/xml_Sellbie.xml</code></td></tr>
+          <tr><td><code>ABRA_CASA_SITE_URL</code></td><td>Domínio público usado nos links de produto da Abra Casa.</td><td><code>https://www.abracasa.com.br</code></td></tr>
+          <tr><td><code>CADABRA_SITE_URL</code></td><td>Domínio público usado nos links de produto da Cadabra.</td><td>Sem padrão — enquanto vazio, os links mantêm o domínio original do feed.</td></tr>
+          <tr><td><code>CATALOG_API_KEY</code></td><td>Chave exigida no cabeçalho <code>Authorization</code>.</td><td>Obrigatória.</td></tr>
+          <tr><td><code>POSTGRES_PASSWORD</code></td><td>Senha do banco PostgreSQL da stack.</td><td>Obrigatória.</td></tr>
+          <tr><td><code>CATALOG_PORT</code></td><td>Porta publicada na VPS.</td><td><code>3000</code></td></tr>
+          <tr><td><code>SYNC_INTERVAL_HOURS</code></td><td>Intervalo entre sincronizações automáticas.</td><td><code>6</code></td></tr>
+        </tbody>
+      </table>
+      <div class="note"><strong>Após alterar variáveis:</strong> faça o redeploy da stack e dispare <code>POST /admin/sync</code> para reprocessar o catálogo imediatamente.</div>
+    </section>
+
     <section id="operacao">
       <h2>Atualização e operação</h2>
       <ul>
@@ -168,6 +196,6 @@ Não invente produtos, atributos ou dados comerciais. Retorne no máximo cinco o
       </ul>
     </section>
   </main>
-  <footer>Documentação da API de Catálogo VTEX • Gerada em 15/07/2026</footer>
+  <footer>Documentação da API de Catálogo VTEX • Atualizada em 16/07/2026</footer>
 </body>
 </html>
