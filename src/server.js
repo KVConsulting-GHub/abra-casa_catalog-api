@@ -15,6 +15,7 @@ function authorized(request) {
   return apiKey && request.headers.authorization === `Bearer ${apiKey}`;
 }
 function limit(value) { return Math.min(Math.max(Number(value) || 10, 1), 20); }
+function offset(value) { const parsed = Math.floor(Number(value)); return Number.isFinite(parsed) && parsed > 0 ? parsed : 0; }
 
 async function handler(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
@@ -35,15 +36,20 @@ async function handler(request, response) {
     const color = url.searchParams.get("color");
     const gtin = url.searchParams.get("gtin");
     const sku = url.searchParams.get("sku_id");
+    const skip = offset(url.searchParams.get("offset"));
     const result = await pool.query(`SELECT id,source,sku_id,item_group_id,name,description,brand,category,color,gtin,mpn,product_url,image_url,
-      CASE WHEN $1 <> '' THEN ts_rank_cd(search_vector, websearch_to_tsquery('portuguese',$1)) ELSE 0 END AS score
+      CASE WHEN $1 <> '' THEN ts_rank_cd(search_vector, websearch_to_tsquery('portuguese',$1)) ELSE 0 END AS score,
+      count(*) OVER()::int AS total
       FROM catalog_products WHERE active
       AND ($1 = '' OR search_vector @@ websearch_to_tsquery('portuguese',$1) OR name ILIKE '%' || $1 || '%')
       AND ($2::text IS NULL OR source = $2) AND ($3::text IS NULL OR category ILIKE '%' || $3 || '%')
       AND ($4::text IS NULL OR brand ILIKE '%' || $4 || '%') AND ($5::text IS NULL OR color ILIKE '%' || $5 || '%')
       AND ($6::text IS NULL OR gtin = $6) AND ($7::text IS NULL OR sku_id = $7)
-      ORDER BY score DESC, name ASC LIMIT $8`, [q,source,category,brand,color,gtin,sku,limit(url.searchParams.get("limit"))]);
-    return json(response, 200, { count: result.rowCount, items: result.rows });
+      ORDER BY score DESC, name ASC, id ASC LIMIT $8 OFFSET $9`,
+      [q,source,category,brand,color,gtin,sku,limit(url.searchParams.get("limit")),skip]);
+    const items = result.rows.map(({ total, ...item }) => item);
+    const total = result.rows[0]?.total ?? 0;
+    return json(response, 200, { count: items.length, total, offset: skip, has_more: skip + items.length < total, items });
   }
   const product = url.pathname.match(/^\/catalog\/products\/([^/]+)$/);
   if (request.method === "GET" && product) {

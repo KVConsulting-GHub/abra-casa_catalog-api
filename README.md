@@ -45,7 +45,9 @@ GET  /catalog/products/2000218
 POST /admin/sync
 ```
 
-Filtros aceitos na busca: `q`, `source` (`cadabra` ou `abra_casa`), `category`, `brand`, `color`, `gtin`, `sku_id` e `limit` (máximo 20). Os filtros podem ser combinados.
+Filtros aceitos na busca: `q`, `source` (`cadabra` ou `abra_casa`), `category`, `brand`, `color`, `gtin`, `sku_id`, `limit` (padrão 10, máximo 20) e `offset` (padrão 0). Os filtros podem ser combinados.
+
+A resposta da busca é paginada: `total` informa quantos produtos casaram com a busca, `count` quantos vieram na página atual e `has_more` se ainda há resultados. Para a próxima página, repita a chamada somando `limit` ao `offset` (ex.: `?q=poltrona&limit=5&offset=5`).
 
 ## Uso no n8n
 
@@ -56,7 +58,7 @@ GET https://catalogo.seudominio.com/catalog/search?q={{ termo }}&category={{ cat
 Authorization: Bearer {{ sua_chave }}
 ```
 
-Instrua o agente: use esta ferramenta para localizar produtos e identifique o `sku_id`; em seguida, consulte a VTEX para informar preço, estoque, prazo ou condições comerciais. Não apresente dados comerciais vindos desta API.
+Instrua o agente: use esta ferramenta para localizar produtos e identifique o `sku_id`; em seguida, consulte a VTEX para informar preço, estoque, prazo ou condições comerciais. Não apresente dados comerciais vindos desta API. Se o cliente pedir mais opções da mesma busca, repita a chamada somando `limit` ao `offset` para trazer produtos ainda não mostrados.
 
 ## Links de produto
 
