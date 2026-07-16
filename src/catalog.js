@@ -35,6 +35,25 @@ function cleanUrl(value) {
   }
 }
 
+function productUrl(value, siteUrl) {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (siteUrl) {
+      const site = new URL(siteUrl);
+      url.protocol = site.protocol;
+      url.host = site.host;
+    }
+    const idsku = url.searchParams.get("idsku");
+    url.search = "";
+    url.hash = "";
+    if (idsku) url.searchParams.set("idsku", idsku);
+    return url.toString();
+  } catch {
+    return value;
+  }
+}
+
 function documentFor(product) {
   return [
     ["Produto", product.name], ["Descrição", product.description],
@@ -44,7 +63,7 @@ function documentFor(product) {
   ].filter(([, value]) => value).map(([label, value]) => `${label}: ${value}`).join("\n");
 }
 
-export function parseFeed(xml, source) {
+export function parseFeed(xml, source, siteUrl) {
   const parsed = parser.parse(xml);
   const raw = parsed?.feed?.item ?? [];
   const items = Array.isArray(raw) ? raw : [raw];
@@ -60,7 +79,7 @@ export function parseFeed(xml, source) {
       description: text(item.description), brand: text(item.brand),
       category: text(item.google_product_category), color: text(item.color),
       gtin: text(item.gtin), mpn: text(item.mpn),
-      product_url: cleanUrl(text(item.link)), image_url: cleanUrl(text(item.image_link))
+      product_url: productUrl(text(item.link), siteUrl), image_url: cleanUrl(text(item.image_link))
     };
     if (ids.has(product.id)) continue;
     ids.add(product.id);

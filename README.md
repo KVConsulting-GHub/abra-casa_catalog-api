@@ -58,6 +58,16 @@ Authorization: Bearer {{ sua_chave }}
 
 Instrua o agente: use esta ferramenta para localizar produtos e identifique o `sku_id`; em seguida, consulte a VTEX para informar preço, estoque, prazo ou condições comerciais. Não apresente dados comerciais vindos desta API.
 
+## Links de produto
+
+Os feeds XML trazem links com o domínio interno da VTEX (`*.vtexcommercestable.com.br`) e parâmetros de rastreamento (`utm_*`). Na importação, o link de produto é reescrito para o domínio público da loja, mantendo apenas o parâmetro `idsku`:
+
+```text
+https://www.abracasa.com.br/cadeira-de-escritorio-madrid-cromada-alta-giratoria-preta-or-3301-alta/p?idsku=2000237
+```
+
+O domínio público é configurado por fonte com `ABRA_CASA_SITE_URL` (padrão: `https://www.abracasa.com.br`) e `CADABRA_SITE_URL` (sem padrão: os links do feed `cadabra` mantêm o domínio original até a variável ser definida). Os links de imagem não são alterados.
+
 ## Atualização
 
 O intervalo é configurado por `SYNC_INTERVAL_HOURS` (padrão: 6). A atualização é atômica: se um download ou processamento falhar, os dados ativos anteriores continuam disponíveis. O endpoint `POST /admin/sync` permite disparar uma sincronização manual autenticada.

@@ -25,6 +25,8 @@ services:
       SYNC_INTERVAL_HOURS: ${SYNC_INTERVAL_HOURS:-6}
       CADABRA_XML_URL: ${CADABRA_XML_URL:-https://abramais2.vtexcommercestable.com.br/XMLData/xml_Sellbie.xml}
       ABRA_CASA_XML_URL: ${ABRA_CASA_XML_URL:-https://novaabracasa.vtexcommercestable.com.br/XMLData/Criteo-default.xml}
+      CADABRA_SITE_URL: ${CADABRA_SITE_URL:-}
+      ABRA_CASA_SITE_URL: ${ABRA_CASA_SITE_URL:-https://www.abracasa.com.br}
     depends_on:
       - postgres
     ports:
