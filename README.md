@@ -45,7 +45,7 @@ GET  /catalog/products/2000218
 POST /admin/sync
 ```
 
-Filtros aceitos na busca: `q`, `source` (`cadabra` ou `abra_casa`), `category`, `brand`, `color`, `gtin`, `sku_id`, `limit` (padrão 10, máximo 20) e `offset` (padrão 0). Os filtros podem ser combinados.
+Filtros aceitos na busca: `q`, `source` (`cadabra` ou `abra_casa`), `category`, `brand`, `color`, `gtin`, `sku_id`, `limit` (padrão 10, máximo 20) e `offset` (padrão 0). Os filtros podem ser combinados. `category`, `brand` e `color` casam por trecho do texto, sem diferenciar maiúsculas nem acentos (`color=freijo` encontra `freijó`).
 
 A resposta da busca é paginada: `total` informa quantos produtos casaram com a busca, `count` quantos vieram na página atual e `has_more` se ainda há resultados. Para a próxima página, repita a chamada somando `limit` ao `offset` (ex.: `?q=poltrona&limit=5&offset=5`).
 

@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
 CREATE TABLE IF NOT EXISTS catalog_products (
   id TEXT PRIMARY KEY,
   source TEXT NOT NULL,

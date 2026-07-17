@@ -42,9 +42,9 @@ async function handler(request, response) {
       CASE WHEN $1 <> '' THEN ts_rank_cd(search_vector, websearch_to_tsquery('portuguese',$1)) ELSE 0 END AS score,
       count(*) OVER()::int AS total
       FROM catalog_products WHERE active
-      AND ($1 = '' OR search_vector @@ websearch_to_tsquery('portuguese',$1) OR name ILIKE '%' || $1 || '%')
-      AND ($2::text IS NULL OR source = $2) AND ($3::text IS NULL OR category ILIKE '%' || $3 || '%')
-      AND ($4::text IS NULL OR brand ILIKE '%' || $4 || '%') AND ($5::text IS NULL OR color ILIKE '%' || $5 || '%')
+      AND ($1 = '' OR search_vector @@ websearch_to_tsquery('portuguese',$1) OR unaccent(name) ILIKE '%' || unaccent($1) || '%')
+      AND ($2::text IS NULL OR source = $2) AND ($3::text IS NULL OR unaccent(category) ILIKE '%' || unaccent($3) || '%')
+      AND ($4::text IS NULL OR unaccent(brand) ILIKE '%' || unaccent($4) || '%') AND ($5::text IS NULL OR unaccent(color) ILIKE '%' || unaccent($5) || '%')
       AND ($6::text IS NULL OR gtin = $6) AND ($7::text IS NULL OR sku_id = $7)
       ORDER BY score DESC, name ASC, id ASC LIMIT $8 OFFSET $9`,
       [q,source,category,brand,color,gtin,sku,limit(url.searchParams.get("limit")),skip]);
@@ -74,6 +74,8 @@ async function waitForDatabase() {
 }
 
 await waitForDatabase();
+// Bancos criados antes da adição do unaccent ao init.sql não têm a extensão.
+await pool.query("CREATE EXTENSION IF NOT EXISTS unaccent");
 http.createServer((req, res) => handler(req, res).catch(error => { console.error(error); json(res, 500, { error: "erro interno" }); })).listen(port, () => {
   console.log(`API ouvindo na porta ${port}`);
   syncCatalog(pool).then(x => console.log("Sincronização inicial:", x)).catch(error => console.error("Falha na sincronização inicial:", error.message));
