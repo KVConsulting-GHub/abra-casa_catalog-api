@@ -47,6 +47,24 @@ POST /admin/sync
 
 Filtros aceitos na busca: `q`, `source` (`cadabra` ou `abra_casa`), `category`, `brand`, `color`, `gtin`, `sku_id`, `limit` (padrão 10, máximo 20) e `offset` (padrão 0). Os filtros podem ser combinados. `category`, `brand` e `color` casam por trecho do texto, sem diferenciar maiúsculas nem acentos (`color=freijo` encontra `freijó`).
 
+### Filtro de cor: múltiplos valores e busca por tom
+
+`color` aceita mais de um valor separado por vírgula — o resultado é a união (qualquer um deles casa):
+
+```text
+GET /catalog/search?q=poltrona&color=rosa,lilás,bege
+```
+
+Também aceita busca por tom, quando o cliente não sabe o nome exato da cor. Os tons disponíveis são `claro`, `escuro`, `pastel`, `metalico`, `terroso` e `amadeirado`, e podem ser escritos de três formas equivalentes — `tons X`, `cores X` ou só `X` (singular, plural ou no feminino):
+
+```text
+GET /catalog/search?q=sofá&color=tons pastéis
+GET /catalog/search?q=sofá&color=cores claras
+GET /catalog/search?q=sofá&color=escuro
+```
+
+Cada tom expande para os nomes de cor reais do catálogo (ex.: `pastel` inclui `rosa`, `rosê`, `lilás`, `menta`, `nude`...). A lista está em `src/colorTones.js` e pode ser ajustada conforme o vocabulário de cor mudar nos feeds.
+
 A resposta da busca é paginada: `total` informa quantos produtos casaram com a busca, `count` quantos vieram na página atual e `has_more` se ainda há resultados. Para a próxima página, repita a chamada somando `limit` ao `offset` (ex.: `?q=poltrona&limit=5&offset=5`).
 
 ## Uso no n8n

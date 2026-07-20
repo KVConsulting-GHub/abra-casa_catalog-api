@@ -1,6 +1,7 @@
 import http from "node:http";
 import { Pool } from "pg";
 import { syncCatalog } from "./sync.js";
+import { colorTerms } from "./colorTones.js";
 
 const port = Number(process.env.PORT || 3000);
 const apiKey = process.env.API_KEY;
@@ -34,7 +35,7 @@ async function handler(request, response) {
     const source = param("source");
     const category = param("category");
     const brand = param("brand");
-    const color = param("color");
+    const color = colorTerms(param("color"));
     const gtin = param("gtin");
     const sku = param("sku_id");
     const skip = offset(url.searchParams.get("offset"));
@@ -44,7 +45,8 @@ async function handler(request, response) {
       FROM catalog_products WHERE active
       AND ($1 = '' OR search_vector @@ websearch_to_tsquery('portuguese',$1) OR unaccent(name) ILIKE '%' || unaccent($1) || '%')
       AND ($2::text IS NULL OR source = $2) AND ($3::text IS NULL OR unaccent(category) ILIKE '%' || unaccent($3) || '%')
-      AND ($4::text IS NULL OR unaccent(brand) ILIKE '%' || unaccent($4) || '%') AND ($5::text IS NULL OR unaccent(color) ILIKE '%' || unaccent($5) || '%')
+      AND ($4::text IS NULL OR unaccent(brand) ILIKE '%' || unaccent($4) || '%')
+      AND ($5::text[] IS NULL OR EXISTS (SELECT 1 FROM unnest($5::text[]) AS term WHERE unaccent(color) ILIKE '%' || unaccent(term) || '%'))
       AND ($6::text IS NULL OR gtin = $6) AND ($7::text IS NULL OR sku_id = $7)
       ORDER BY score DESC, name ASC, id ASC LIMIT $8 OFFSET $9`,
       [q,source,category,brand,color,gtin,sku,limit(url.searchParams.get("limit")),skip]);

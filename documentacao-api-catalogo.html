@@ -83,7 +83,7 @@ Authorization: Bearer SUA_CATALOG_API_KEY</code></pre>
         <tbody>
           <tr><td><code>q</code></td><td>Nome, descrição e termos de busca.</td><td><code>cadeira escritório giratória</code></td></tr>
           <tr><td><code>category</code></td><td>Parte do nome da categoria, sem diferenciar maiúsculas nem acentos.</td><td><code>Cadeiras</code></td></tr>
-          <tr><td><code>color</code></td><td>Parte do nome da cor, sem diferenciar maiúsculas nem acentos (<code>freijo</code> encontra <code>freijó</code>).</td><td><code>preto</code></td></tr>
+          <tr><td><code>color</code></td><td>Parte do nome da cor, sem diferenciar maiúsculas nem acentos (<code>freijo</code> encontra <code>freijó</code>). Aceita múltiplos valores separados por vírgula e busca por tom — veja abaixo.</td><td><code>preto</code></td></tr>
           <tr><td><code>brand</code></td><td>Parte do nome da marca, sem diferenciar maiúsculas nem acentos.</td><td><code>Abra Casa</code></td></tr>
           <tr><td><code>gtin</code></td><td>EAN/GTIN exato.</td><td><code>7898599220281</code></td></tr>
           <tr><td><code>sku_id</code></td><td>SKU exato.</td><td><code>2000218</code></td></tr>
@@ -132,6 +132,21 @@ Authorization: Bearer SUA_CATALOG_API_KEY</code></pre>
 GET /catalog/search?q=poltrona&amp;limit=5&amp;offset=5   → itens 6–10
 GET /catalog/search?q=poltrona&amp;limit=5&amp;offset=10  → itens 11–15</code></pre>
       <div class="note"><strong>No atendimento:</strong> quando o cliente pedir "outras opções", pagine com <code>offset</code> em vez de repetir a mesma chamada — assim aparecem produtos ainda não mostrados.</div>
+
+      <h3>Filtro de cor: múltiplas cores e busca por tom</h3>
+      <p><code>color</code> aceita mais de um valor separado por vírgula — o resultado é a união (qualquer um deles casa):</p>
+      <pre><code>GET /catalog/search?q=poltrona&amp;color=rosa,lilás,bege
+GET /catalog/search?q=sofá&amp;color=cinza,grafite,off white</code></pre>
+      <p>Quando o cliente não sabe o nome exato da cor, <code>color</code> também aceita busca por tom. Os tons disponíveis são <code>claro</code>, <code>escuro</code>, <code>pastel</code>, <code>metalico</code>, <code>terroso</code> e <code>amadeirado</code>, em três formas equivalentes — <code>tons X</code>, <code>cores X</code> ou só <code>X</code> (singular, plural ou feminino):</p>
+      <pre><code>GET /catalog/search?q=sofá&amp;color=tons pastéis
+GET /catalog/search?q=sofá&amp;color=cores pastéis
+GET /catalog/search?q=sofá&amp;color=pastéis          ← as três chamadas acima retornam o mesmo resultado
+
+GET /catalog/search?q=sofá&amp;color=cores claras
+GET /catalog/search?q=sofá&amp;color=escuro
+GET /catalog/search?q=mesa de centro&amp;color=tons amadeirados
+GET /catalog/search?q=almofada&amp;color=tons terrosos</code></pre>
+      <div class="note ok"><strong>No atendimento:</strong> se o cliente disser "quero em tons claros" ou "algo mais escuro", passe isso direto no <code>color</code> — não é preciso adivinhar o nome exato da cor antes de buscar.</div>
     </section>
 
     <section>
@@ -173,6 +188,9 @@ Na API:   https://www.abracasa.com.br/cadeira-madrid.../p?idsku=2000237</code></
       <h3>Instrução para o agente</h3>
       <pre><code>Ao receber uma pergunta sobre produtos, consulte primeiro a ferramenta de catálogo.
 Extraia o tipo de produto, categoria, cor, marca, EAN ou SKU quando disponíveis.
+Se o cliente não souber o nome exato da cor, use um tom em color: claro, escuro,
+pastel, metalico, terroso ou amadeirado (ex.: color=tons pastéis). Para mais de
+uma cor, separe por vírgula (ex.: color=rosa,lilás,bege).
 Use o sku_id retornado para consultar a VTEX e obter preço, estoque e prazo atuais.
 Não invente produtos, atributos ou dados comerciais. Retorne no máximo cinco opções.
 Se o cliente pedir mais opções da mesma busca, repita a chamada somando limit ao offset
