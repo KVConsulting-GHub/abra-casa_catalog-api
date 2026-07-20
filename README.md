@@ -25,6 +25,8 @@ CATALOG_API_IMAGE=ghcr.io/SEU_USUARIO/SEU_REPOSITORIO:latest
 
 Mantenha as demais variáveis (`POSTGRES_PASSWORD`, `CATALOG_API_KEY`, `CATALOG_PORT` e `SYNC_INTERVAL_HOURS`).
 
+Se o deploy falhar com `failed to update config ... only updates to Labels are allowed`: o `docker-stack.yml` usa um Docker **config** para carregar `db/init.sql` no Postgres, e configs do Swarm são imutáveis — mudar o conteúdo do arquivo sem renomear o config faz o Swarm recusar a atualização. A correção é sempre incrementar o sufixo de versão do config (ex.: `catalog-init-v2` → `catalog-init-v3`) tanto na seção `configs:` quanto na referência do serviço `postgres`, sempre que `db/init.sql` for alterado.
+
 ## Autenticação
 
 Todas as rotas, exceto `/health`, exigem:

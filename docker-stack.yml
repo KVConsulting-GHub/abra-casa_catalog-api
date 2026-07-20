@@ -12,7 +12,7 @@ services:
     volumes:
       - catalog-postgres:/var/lib/postgresql/data
     configs:
-      - source: catalog-init
+      - source: catalog-init-v2
         target: /docker-entrypoint-initdb.d/01-init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-catalog} -d ${POSTGRES_DB:-catalog}"]
@@ -54,5 +54,9 @@ volumes:
   catalog-postgres:
 
 configs:
-  catalog-init:
+  # Configs do Swarm são imutáveis: mudar o conteúdo de db/init.sql sem
+  # renomear o config faz o deploy falhar com "only updates to Labels are
+  # allowed". Sempre que db/init.sql mudar, incremente o sufixo (v2 -> v3...)
+  # aqui e na referência acima, em vez de manter o mesmo nome.
+  catalog-init-v2:
     file: ./db/init.sql
