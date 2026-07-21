@@ -45,7 +45,7 @@
 
   <main>
     <nav>
-      <a href="#visao">Visão geral</a><a href="#autenticacao">Autenticação</a><a href="#rotas">Rotas</a><a href="#busca">Busca</a><a href="#links">Links</a><a href="#n8n">n8n</a><a href="#configuracao">Configuração</a><a href="#operacao">Operação</a>
+      <a href="#visao">Visão geral</a><a href="#autenticacao">Autenticação</a><a href="#rotas">Rotas</a><a href="#busca">Busca</a><a href="#cores">Cores</a><a href="#links">Links</a><a href="#n8n">n8n</a><a href="#configuracao">Configuração</a><a href="#operacao">Operação</a>
     </nav>
 
     <section id="visao">
@@ -147,6 +147,134 @@ GET /catalog/search?q=sofá&amp;color=escuro
 GET /catalog/search?q=mesa de centro&amp;color=tons amadeirados
 GET /catalog/search?q=almofada&amp;color=tons terrosos</code></pre>
       <div class="note ok"><strong>No atendimento:</strong> se o cliente disser "quero em tons claros" ou "algo mais escuro", passe isso direto no <code>color</code> — não é preciso adivinhar o nome exato da cor antes de buscar.</div>
+    </section>
+
+    <section id="cores">
+      <h2>Cores e tons disponíveis</h2>
+      <p>Referência completa por trás do filtro <code>color</code>, extraída do vocabulário real dos dois feeds XML (Abra Casa e Cadabra). Use esta seção para saber exatamente o que cada tom retorna e quais cores existem no catálogo hoje.</p>
+
+      <h3>Combinação de cada tom com as cores do catálogo</h3>
+      <p>Cada tom ajustado em <code>color</code> expande para esta lista de cores (correspondência por trecho de texto, sem acento — ver <a href="#busca">Busca</a>). A fonte desta tabela é <code>src/colorTones.js</code>.</p>
+      <table>
+        <thead><tr><th>Tom</th><th>Cores incluídas</th></tr></thead>
+        <tbody>
+          <tr><td><code>claro</code> (Claro)</td><td>branco, branca, off white, areia, bege, creme, marfim, pérola, cru, aveia, papiro, duna, nude, trigo, granizo, natural</td></tr>
+          <tr><td><code>escuro</code> (Escuro)</td><td>preto, grafite, chumbo, marrom, castanho, azul petróleo, verde militar, cimento</td></tr>
+          <tr><td><code>pastel</code> (Pastel)</td><td>rosa, rosê, lilás, menta, azul sereno, nude, salmão, tiffany, off white</td></tr>
+          <tr><td><code>metalico</code> (Metálico)</td><td>dourado, prateado, prata, bronze, cobre</td></tr>
+          <tr><td><code>terroso</code> (Terroso)</td><td>terracota, argila, terra, deserto, telha, tijolo, ferrugem, canela, cognac, caramelo, avelã, mel, savana, açafrão</td></tr>
+          <tr><td><code>amadeirado</code> (Amadeirado)</td><td>madeira, louro freijó, freijó, carvalho, nozes, olmo, bétula, cinamomo, caramelo, cognac, capuccino, tammi, whisky, macchiato, savana, amarula, avelã, castanho</td></tr>
+        </tbody>
+      </table>
+      <div class="note"><strong>Cores em mais de um tom:</strong> <code>avelã</code>, <code>caramelo</code>, <code>cognac</code> e <code>savana</code> aparecem em Amadeirado e Terroso; <code>castanho</code> em Amadeirado e Escuro; <code>nude</code> e <code>off white</code> em Claro e Pastel. Um produto nessas cores aparece nos dois tons.</div>
+
+      <h3>Todas as cores do catálogo</h3>
+      <p>As 99 cores distintas encontradas nos dois feeds, com a loja onde aparecem e o(s) tom(ns) a que pertencem (quando aplicável). Cores sem tom associado só podem ser buscadas pelo nome literal (ex.: <code>color=verde</code>).</p>
+      <table>
+        <thead><tr><th>Cor</th><th>Loja(s)</th><th>Tom(ns)</th></tr></thead>
+        <tbody>
+          <tr><td>açafrão</td><td>Abra Casa</td><td>Terroso</td></tr>
+          <tr><td>amarela</td><td>Abra Casa</td><td>—</td></tr>
+          <tr><td>amarelo</td><td>Cadabra</td><td>—</td></tr>
+          <tr><td>amarula</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>amêndoa</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>areia</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>argila</td><td>Ambas</td><td>Terroso</td></tr>
+          <tr><td>aveia</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>avelã</td><td>Ambas</td><td>Amadeirado, Terroso</td></tr>
+          <tr><td>azul</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>azul petróleo</td><td>Cadabra</td><td>Escuro</td></tr>
+          <tr><td>azul sereno</td><td>Ambas</td><td>Pastel</td></tr>
+          <tr><td>bege</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>bétula</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>botonê</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>branca</td><td>Abra Casa</td><td>Claro</td></tr>
+          <tr><td>branco</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>bronze</td><td>Ambas</td><td>Metálico</td></tr>
+          <tr><td>cacto</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>caju</td><td>Cadabra</td><td>—</td></tr>
+          <tr><td>canela</td><td>Ambas</td><td>Terroso</td></tr>
+          <tr><td>capuccino</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>caqui</td><td>Cadabra</td><td>—</td></tr>
+          <tr><td>caramelo</td><td>Ambas</td><td>Amadeirado, Terroso</td></tr>
+          <tr><td>carvalho</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>castanho</td><td>Ambas</td><td>Amadeirado, Escuro</td></tr>
+          <tr><td>chumbo</td><td>Ambas</td><td>Escuro</td></tr>
+          <tr><td>cimento</td><td>Ambas</td><td>Escuro</td></tr>
+          <tr><td>cinamomo</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>cinza</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>classic oat</td><td>Cadabra</td><td>—</td></tr>
+          <tr><td>cobre</td><td>Ambas</td><td>Metálico</td></tr>
+          <tr><td>cognac</td><td>Ambas</td><td>Amadeirado, Terroso</td></tr>
+          <tr><td>colorido</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>concreto</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>creme</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>cru</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>deserto</td><td>Ambas</td><td>Terroso</td></tr>
+          <tr><td>dourado</td><td>Ambas</td><td>Metálico</td></tr>
+          <tr><td>duna</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>estampado</td><td>Cadabra</td><td>—</td></tr>
+          <tr><td>fendi</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>ferrugem</td><td>Ambas</td><td>Terroso</td></tr>
+          <tr><td>floral</td><td>Cadabra</td><td>—</td></tr>
+          <tr><td>freijó</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>grafite</td><td>Ambas</td><td>Escuro</td></tr>
+          <tr><td>granizo</td><td>Abra Casa</td><td>Claro</td></tr>
+          <tr><td>griggio</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>gris</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>incolor</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>laranja</td><td>Cadabra</td><td>—</td></tr>
+          <tr><td>lilás</td><td>Cadabra</td><td>Pastel</td></tr>
+          <tr><td>linhão</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>louro freijó</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>lugano</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>macchiato</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>madeira</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>mandarina</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>marfim</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>marrom</td><td>Ambas</td><td>Escuro</td></tr>
+          <tr><td>mel</td><td>Ambas</td><td>Terroso</td></tr>
+          <tr><td>melton</td><td>Abra Casa</td><td>Terroso*</td></tr>
+          <tr><td>menta</td><td>Ambas</td><td>Pastel</td></tr>
+          <tr><td>musgo</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>natural</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>nozes</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>nude</td><td>Ambas</td><td>Claro, Pastel</td></tr>
+          <tr><td>off white</td><td>Ambas</td><td>Claro, Pastel</td></tr>
+          <tr><td>olmo</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>paçoca</td><td>Cadabra</td><td>—</td></tr>
+          <tr><td>papiro</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>pérola</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>prata</td><td>Cadabra</td><td>Metálico</td></tr>
+          <tr><td>prateado</td><td>Ambas</td><td>Metálico</td></tr>
+          <tr><td>preto</td><td>Ambas</td><td>Escuro</td></tr>
+          <tr><td>rosa</td><td>Ambas</td><td>Pastel</td></tr>
+          <tr><td>rosê</td><td>Ambas</td><td>Pastel</td></tr>
+          <tr><td>safira</td><td>Abra Casa</td><td>—</td></tr>
+          <tr><td>salmão</td><td>Cadabra</td><td>Pastel</td></tr>
+          <tr><td>sarja</td><td>Cadabra</td><td>—</td></tr>
+          <tr><td>saturno</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>savana</td><td>Ambas</td><td>Amadeirado, Terroso</td></tr>
+          <tr><td>tammi</td><td>Ambas</td><td>Amadeirado</td></tr>
+          <tr><td>tan</td><td>Abra Casa</td><td>—</td></tr>
+          <tr><td>telha</td><td>Ambas</td><td>Terroso</td></tr>
+          <tr><td>terra</td><td>Ambas</td><td>Terroso</td></tr>
+          <tr><td>terracota</td><td>Ambas</td><td>Terroso</td></tr>
+          <tr><td>tiffany</td><td>Cadabra</td><td>Pastel</td></tr>
+          <tr><td>tijolo</td><td>Ambas</td><td>Terroso</td></tr>
+          <tr><td>transparente</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>trellis claro</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>trigo</td><td>Ambas</td><td>Claro</td></tr>
+          <tr><td>trufa</td><td>Cadabra</td><td>—</td></tr>
+          <tr><td>twillic truffle</td><td>Cadabra</td><td>—</td></tr>
+          <tr><td>verde</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>verde militar</td><td>Ambas</td><td>Escuro</td></tr>
+          <tr><td>verde musgo</td><td>Ambas</td><td>—</td></tr>
+          <tr><td>vermelho</td><td>Ambas</td><td>Terroso</td></tr>
+          <tr><td>whisky</td><td>Ambas</td><td>Amadeirado</td></tr>
+        </tbody>
+      </table>
+      <div class="note warn"><strong>*melton:</strong> cai em Terroso só porque "mel" é um trecho de "melton" — coincidência da correspondência por texto, não uma classificação intencional. Afeta 1 produto na Abra Casa; avise se quiser que eu corrija esse tipo de colisão por substring.</div>
     </section>
 
     <section>
