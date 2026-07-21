@@ -312,7 +312,7 @@ GET /health
 
 ## Links de produto
 
-Os feeds XML da VTEX trazem links com o domínio interno da plataforma (`*.vtexcommercestable.com.br`) e parâmetros de rastreamento (`utm_*`). Durante a importação, o link de produto é reescrito para o domínio público da loja, preservando apenas o parâmetro `idsku`:
+Os feeds XML da VTEX trazem links com o domínio interno da plataforma (`*.vtexcommercestable.com.br`) e os parâmetros de rastreamento do próprio feed (`utm_*`, geralmente de outro canal). Durante a importação, o link de produto é reescrito para o domínio público da loja, preservando apenas o parâmetro `idsku` — os `utm_*` do feed são descartados:
 
 ```
 No feed:  https://novaabracasa.vtexcommercestable.com.br/cadeira-madrid.../p?idsku=2000237&utm_source=criteo&utm_campaign=cpc
@@ -321,7 +321,22 @@ Na API:   https://www.abracasa.com.br/cadeira-madrid.../p?idsku=2000237
 
 O domínio público é configurado por loja com `ABRA_CASA_SITE_URL` e `CADABRA_SITE_URL` (veja [Configuração](#configuração-variáveis-de-ambiente)). Os links de imagem não são alterados.
 
-> ✅ **Pode apresentar ao cliente:** o `product_url` já sai pronto para compartilhamento, sem domínio interno nem parâmetros de campanha.
+### UTMs próprias nos links de produto
+
+Depois de remover os `utm_*` do feed, é possível anexar UTMs próprias (para rastrear que a venda veio do agente) com `ABRA_CASA_UTM` e `CADABRA_UTM` — uma query string, com ou sem `?` na frente:
+
+```
+ABRA_CASA_UTM=utm_medium=chat&utm_source=whatsapp_ai
+CADABRA_UTM=utm_medium=chat&utm_source=whatsapp_ai
+```
+
+```
+https://www.abracasa.com.br/cadeira-de-escritorio-madrid-cromada-alta-giratoria-preta-or-3301-alta/p?idsku=2000237&utm_medium=chat&utm_source=whatsapp_ai
+```
+
+Sem essas variáveis definidas, o link sai só com `idsku`, como antes.
+
+> ✅ **Pode apresentar ao cliente:** o `product_url` já sai pronto para compartilhamento, sem domínio interno nem parâmetros de campanha de terceiros — só as UTMs próprias, se configuradas.
 
 ## Configuração sugerida no n8n
 
@@ -360,6 +375,8 @@ Definidas no `.env` da stack ou na tela *Environment variables* do Portainer. Ca
 | `CADABRA_XML_URL` | URL do XML da loja Cadabra. | `https://abramais2.vtexcommercestable.com.br/XMLData/xml_Sellbie.xml` |
 | `ABRA_CASA_SITE_URL` | Domínio público usado nos links de produto da Abra Casa. | `https://www.abracasa.com.br` |
 | `CADABRA_SITE_URL` | Domínio público usado nos links de produto da Cadabra. | Sem padrão — enquanto vazio, os links mantêm o domínio original do feed. |
+| `ABRA_CASA_UTM` | UTMs próprias anexadas ao `product_url` da Abra Casa (query string, com ou sem `?`). | `utm_medium=chat&utm_source=whatsapp_ai` |
+| `CADABRA_UTM` | UTMs próprias anexadas ao `product_url` da Cadabra (query string, com ou sem `?`). | `utm_medium=chat&utm_source=whatsapp_ai` |
 | `CATALOG_API_KEY` | Chave exigida no cabeçalho `Authorization`. | Obrigatória. |
 | `POSTGRES_PASSWORD` | Senha do banco PostgreSQL da stack. | Obrigatória. |
 | `CATALOG_PORT` | Porta publicada na VPS. | `3000` |

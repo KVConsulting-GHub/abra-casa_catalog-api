@@ -35,7 +35,7 @@ function cleanUrl(value) {
   }
 }
 
-function productUrl(value, siteUrl) {
+function productUrl(value, siteUrl, utm) {
   if (!value) return null;
   try {
     const url = new URL(value);
@@ -48,6 +48,7 @@ function productUrl(value, siteUrl) {
     url.search = "";
     url.hash = "";
     if (idsku) url.searchParams.set("idsku", idsku);
+    if (utm) for (const [key, val] of new URLSearchParams(utm)) url.searchParams.set(key, val);
     return url.toString();
   } catch {
     return value;
@@ -87,7 +88,7 @@ function documentFor(product) {
   ].filter(([, value]) => value).map(([label, value]) => `${label}: ${value}`).join("\n");
 }
 
-export function parseFeed(xml, source, siteUrl) {
+export function parseFeed(xml, source, siteUrl, utm) {
   const parsed = parser.parse(xml);
   // Feeds da VTEX chegam em dois formatos: Atom (<feed><item>) e RSS 2.0
   // (<rss><channel><Item>, com Item maiúsculo). Sem os dois caminhos, feeds
@@ -106,7 +107,7 @@ export function parseFeed(xml, source, siteUrl) {
       description: text(item.description), brand: text(item.brand),
       category: text(item.google_product_category), color: text(item.color),
       gtin: text(item.gtin), mpn: text(item.mpn),
-      product_url: productUrl(text(item.link), siteUrl), image_url: cleanUrl(text(item.image_link))
+      product_url: productUrl(text(item.link), siteUrl, utm), image_url: cleanUrl(text(item.image_link))
     };
     if (ids.has(product.id)) continue;
     ids.add(product.id);

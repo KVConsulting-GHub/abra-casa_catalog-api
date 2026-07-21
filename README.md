@@ -101,13 +101,28 @@ Instrua o agente: use esta ferramenta para localizar produtos e identifique o `s
 
 ## Links de produto
 
-Os feeds XML trazem links com o domínio interno da VTEX (`*.vtexcommercestable.com.br`) e parâmetros de rastreamento (`utm_*`). Na importação, o link de produto é reescrito para o domínio público da loja, mantendo apenas o parâmetro `idsku`:
+Os feeds XML trazem links com o domínio interno da VTEX (`*.vtexcommercestable.com.br`) e os próprios parâmetros de rastreamento do feed (`utm_*`). Na importação, o link de produto é reescrito para o domínio público da loja, mantendo apenas o parâmetro `idsku` — os `utm_*` originais do feed são descartados:
 
 ```text
 https://www.abracasa.com.br/cadeira-de-escritorio-madrid-cromada-alta-giratoria-preta-or-3301-alta/p?idsku=2000237
 ```
 
 O domínio público é configurado por fonte com `ABRA_CASA_SITE_URL` (padrão: `https://www.abracasa.com.br`) e `CADABRA_SITE_URL` (sem padrão: os links do feed `cadabra` mantêm o domínio original até a variável ser definida). Os links de imagem não são alterados.
+
+### UTMs próprias nos links de produto
+
+Depois de remover os `utm_*` do feed, é possível anexar UTMs próprias (para rastrear que a venda veio do agente) com `ABRA_CASA_UTM` e `CADABRA_UTM` — uma query string, com ou sem `?` na frente:
+
+```text
+ABRA_CASA_UTM=utm_medium=chat&utm_source=whatsapp_ai
+CADABRA_UTM=utm_medium=chat&utm_source=whatsapp_ai
+```
+
+```text
+https://www.abracasa.com.br/cadeira-de-escritorio-madrid-cromada-alta-giratoria-preta-or-3301-alta/p?idsku=2000237&utm_medium=chat&utm_source=whatsapp_ai
+```
+
+Sem essas variáveis definidas, o link sai só com `idsku`, como antes.
 
 ## Atualização
 

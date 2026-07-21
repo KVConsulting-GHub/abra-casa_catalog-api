@@ -35,6 +35,8 @@ services:
       ABRA_CASA_XML_URL: ${ABRA_CASA_XML_URL:-https://novaabracasa.vtexcommercestable.com.br/XMLData/Criteo-default.xml}
       CADABRA_SITE_URL: ${CADABRA_SITE_URL:-}
       ABRA_CASA_SITE_URL: ${ABRA_CASA_SITE_URL:-https://www.abracasa.com.br}
+      CADABRA_UTM: ${CADABRA_UTM:-utm_medium=chat&utm_source=whatsapp_ai}
+      ABRA_CASA_UTM: ${ABRA_CASA_UTM:-utm_medium=chat&utm_source=whatsapp_ai}
     ports:
       - target: 3000
         published: ${CATALOG_PORT:-3000}

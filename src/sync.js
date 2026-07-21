@@ -1,14 +1,14 @@
 import { parseFeed } from "./catalog.js";
 
 const feeds = () => [
-  { source: "cadabra", url: process.env.CADABRA_XML_URL, siteUrl: process.env.CADABRA_SITE_URL || null },
-  { source: "abra_casa", url: process.env.ABRA_CASA_XML_URL, siteUrl: process.env.ABRA_CASA_SITE_URL || "https://www.abracasa.com.br" }
+  { source: "cadabra", url: process.env.CADABRA_XML_URL, siteUrl: process.env.CADABRA_SITE_URL || null, utm: process.env.CADABRA_UTM || null },
+  { source: "abra_casa", url: process.env.ABRA_CASA_XML_URL, siteUrl: process.env.ABRA_CASA_SITE_URL || "https://www.abracasa.com.br", utm: process.env.ABRA_CASA_UTM || null }
 ];
 
 async function download(feed) {
   const response = await fetch(feed.url, { headers: { Accept: "application/xml,text/xml" }, signal: AbortSignal.timeout(60000) });
   if (!response.ok) throw new Error(`${feed.source}: HTTP ${response.status}`);
-  return parseFeed(await response.text(), feed.source, feed.siteUrl);
+  return parseFeed(await response.text(), feed.source, feed.siteUrl, feed.utm);
 }
 
 async function replaceSource(client, source, products) {
