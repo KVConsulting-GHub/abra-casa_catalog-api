@@ -65,7 +65,10 @@ function documentFor(product) {
 
 export function parseFeed(xml, source, siteUrl) {
   const parsed = parser.parse(xml);
-  const raw = parsed?.feed?.item ?? [];
+  // Feeds da VTEX chegam em dois formatos: Atom (<feed><item>) e RSS 2.0
+  // (<rss><channel><Item>, com Item maiúsculo). Sem os dois caminhos, feeds
+  // no segundo formato são silenciosamente ignorados (nenhum produto).
+  const raw = parsed?.feed?.item ?? parsed?.rss?.channel?.Item ?? parsed?.rss?.channel?.item ?? [];
   const items = Array.isArray(raw) ? raw : [raw];
   const ids = new Set();
   const products = [];
