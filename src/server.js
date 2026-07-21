@@ -39,18 +39,43 @@ async function handler(request, response) {
     const gtin = param("gtin");
     const sku = param("sku_id");
     const skip = offset(url.searchParams.get("offset"));
-    const result = await pool.query(`SELECT id,source,sku_id,item_group_id,name,description,brand,category,color,gtin,mpn,product_url,image_url,
-      CASE WHEN $1 <> '' THEN ts_rank_cd(search_vector, websearch_to_tsquery('portuguese',$1)) ELSE 0 END AS score,
-      count(*) OVER()::int AS total
-      FROM catalog_products WHERE active
-      AND ($1 = '' OR search_vector @@ websearch_to_tsquery('portuguese',$1) OR unaccent(name) ILIKE '%' || unaccent($1) || '%')
-      AND ($2::text IS NULL OR source = $2) AND ($3::text IS NULL OR unaccent(category) ILIKE '%' || unaccent($3) || '%')
-      AND ($4::text IS NULL OR unaccent(brand) ILIKE '%' || unaccent($4) || '%')
-      AND ($5::text[] IS NULL OR EXISTS (SELECT 1 FROM unnest($5::text[]) AS term WHERE unaccent(color) ILIKE '%' || unaccent(term) || '%'))
-      AND ($6::text IS NULL OR gtin = $6) AND ($7::text IS NULL OR sku_id = $7)
-      ORDER BY score DESC, name ASC, id ASC LIMIT $8 OFFSET $9`,
+    // Agrupa SKUs que são variações (cor, acabamento) do mesmo produto em um
+    // único resultado, com a lista de variações anexada — ver variantGroup
+    // em src/catalog.js. O representante de cada grupo é o SKU de maior
+    // score (melhor match textual); os demais campos do topo vêm dele.
+    const result = await pool.query(`WITH matched AS (
+        SELECT id,source,sku_id,item_group_id,name,description,brand,category,color,gtin,mpn,product_url,image_url,variant_group,
+        CASE WHEN $1 <> '' THEN ts_rank_cd(search_vector, websearch_to_tsquery('portuguese',$1)) ELSE 0 END AS score
+        FROM catalog_products WHERE active
+        AND ($1 = '' OR search_vector @@ websearch_to_tsquery('portuguese',$1) OR unaccent(name) ILIKE '%' || unaccent($1) || '%')
+        AND ($2::text IS NULL OR source = $2) AND ($3::text IS NULL OR unaccent(category) ILIKE '%' || unaccent($3) || '%')
+        AND ($4::text IS NULL OR unaccent(brand) ILIKE '%' || unaccent($4) || '%')
+        AND ($5::text[] IS NULL OR EXISTS (SELECT 1 FROM unnest($5::text[]) AS term WHERE unaccent(color) ILIKE '%' || unaccent(term) || '%'))
+        AND ($6::text IS NULL OR gtin = $6) AND ($7::text IS NULL OR sku_id = $7)
+      ), groups AS (
+        -- COALESCE evita juntar produtos sem variant_group ainda definido
+        -- (janela entre um deploy que adiciona a coluna e a próxima sync)
+        -- num único grupo, já que GROUP BY trata NULL como um valor igual.
+        SELECT COALESCE(variant_group, id) AS group_key, max(score) AS score, count(*)::int AS variation_count,
+        (array_agg(id ORDER BY score DESC, name ASC, sku_id ASC))[1] AS representative_id
+        FROM matched GROUP BY COALESCE(variant_group, id)
+      ), paged AS (
+        SELECT *, count(*) OVER()::int AS total FROM groups
+        ORDER BY score DESC, representative_id ASC LIMIT $8 OFFSET $9
+      )
+      SELECT r.source,r.sku_id,r.item_group_id,r.name,r.description,r.brand,r.category,r.color,r.gtin,r.mpn,r.product_url,r.image_url,
+      p.variation_count, p.total,
+      CASE WHEN p.variation_count > 1 THEN (
+        SELECT jsonb_agg(jsonb_build_object(
+          'sku_id', m.sku_id, 'name', m.name, 'color', m.color, 'gtin', m.gtin, 'mpn', m.mpn,
+          'product_url', m.product_url, 'image_url', m.image_url
+        ) ORDER BY m.color NULLS LAST, m.name)
+        FROM matched m WHERE COALESCE(m.variant_group, m.id) = p.group_key
+      ) END AS variations
+      FROM paged p JOIN matched r ON r.id = p.representative_id
+      ORDER BY p.score DESC, r.name ASC, r.sku_id ASC`,
       [q,source,category,brand,color,gtin,sku,limit(url.searchParams.get("limit")),skip]);
-    const items = result.rows.map(({ total, ...item }) => item);
+    const items = result.rows.map(({ total, variation_count, variations, ...item }) => variations ? { ...item, variations } : item);
     const total = result.rows[0]?.total ?? 0;
     return json(response, 200, { count: items.length, total, offset: skip, has_more: skip + items.length < total, items });
   }
@@ -76,8 +101,11 @@ async function waitForDatabase() {
 }
 
 await waitForDatabase();
-// Bancos criados antes da adição do unaccent ao init.sql não têm a extensão.
+// Bancos criados antes da adição do unaccent/variant_group ao init.sql não
+// têm essas mudanças; init.sql só roda na primeira inicialização do volume.
 await pool.query("CREATE EXTENSION IF NOT EXISTS unaccent");
+await pool.query("ALTER TABLE catalog_products ADD COLUMN IF NOT EXISTS variant_group TEXT");
+await pool.query("CREATE INDEX IF NOT EXISTS catalog_products_variant_group_idx ON catalog_products (variant_group) WHERE active");
 http.createServer((req, res) => handler(req, res).catch(error => { console.error(error); json(res, 500, { error: "erro interno" }); })).listen(port, () => {
   console.log(`API ouvindo na porta ${port}`);
   syncCatalog(pool).then(x => console.log("Sincronização inicial:", x)).catch(error => console.error("Falha na sincronização inicial:", error.message));

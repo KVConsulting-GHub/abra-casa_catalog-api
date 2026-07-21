@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS catalog_products (
   mpn TEXT,
   product_url TEXT,
   image_url TEXT,
+  variant_group TEXT,
   search_document TEXT NOT NULL,
   search_vector TSVECTOR NOT NULL,
   active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -24,6 +25,7 @@ CREATE INDEX IF NOT EXISTS catalog_products_active_idx ON catalog_products (acti
 CREATE INDEX IF NOT EXISTS catalog_products_source_sku_idx ON catalog_products (source, sku_id);
 CREATE INDEX IF NOT EXISTS catalog_products_gtin_idx ON catalog_products (gtin) WHERE gtin IS NOT NULL;
 CREATE INDEX IF NOT EXISTS catalog_products_filters_idx ON catalog_products (category, brand, color) WHERE active;
+CREATE INDEX IF NOT EXISTS catalog_products_variant_group_idx ON catalog_products (variant_group) WHERE active;
 CREATE INDEX IF NOT EXISTS catalog_products_search_idx ON catalog_products USING GIN (search_vector);
 
 CREATE TABLE IF NOT EXISTS sync_runs (

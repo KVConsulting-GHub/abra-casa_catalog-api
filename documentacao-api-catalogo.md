@@ -110,6 +110,29 @@ GET /catalog/search?q=poltrona&limit=5&offset=10  → itens 11–15
 
 > ℹ️ **No atendimento:** quando o cliente pedir "outras opções", pagine com `offset` em vez de repetir a mesma chamada — assim aparecem produtos ainda não mostrados.
 
+### Variações de produto (cor, acabamento)
+
+Muitos produtos existem no feed como um SKU por cor/acabamento (ex.: a mesma cadeira em 7 cores). A busca agrupa esses SKUs automaticamente pelo nome base do produto — cada resultado representa **um produto**, e as demais opções aparecem dentro de `variations`:
+
+```json
+{
+  "sku_id": "2000217",
+  "name": "Cadeira Eames Eiffel Base Madeira - Branco",
+  "color": "branca",
+  "product_url": "https://www.abracasa.com.br/cadeira-eames-eiffel-base-madeira-branca/p?idsku=2000217",
+  "variations": [
+    { "sku_id": "2000218", "name": "Cadeira Eames Eiffel Base Madeira - Preto", "color": "preto", "product_url": "..." },
+    { "sku_id": "2005787", "name": "Cadeira Eames Eiffel Base Madeira - Azul", "color": "azul", "product_url": "..." }
+  ]
+}
+```
+
+`variations` só aparece quando existe mais de uma opção — um produto sem variações não ganha esse campo, mantendo a resposta idêntica à de antes.
+
+> ✅ **No atendimento:** quando um item tiver `variations`, apresente como um produto só e mencione que existem outras cores/opções — nunca repita o mesmo produto uma vez por variação.
+
+> ⚠️ **Limitação conhecida:** nenhum dos dois feeds expõe um ID de produto-pai confiável entre variações (a Cadabra não tem esse campo; a Abra Casa tem `item_group_id`, mas vem único por SKU, não compartilhado entre cores). O agrupamento usa uma heurística de nome (texto antes do último " - " no título + categoria + marca) — pode ocasionalmente juntar produtos parecidos que não são a mesma peça, ou não juntar uma variação com título fora do padrão "Nome - Cor". Lógica em `variantGroupKey`, `src/catalog.js`.
+
 ### Filtro de cor: múltiplas cores e busca por tom
 
 `color` aceita mais de um valor separado por vírgula — o resultado é a união (qualquer um deles casa):
@@ -323,6 +346,8 @@ Use o sku_id retornado para consultar a VTEX e obter preço, estoque e prazo atu
 Não invente produtos, atributos ou dados comerciais. Retorne no máximo cinco opções.
 Se o cliente pedir mais opções da mesma busca, repita a chamada somando limit ao offset
 (primeira chamada offset=0, depois offset=5, offset=10...) enquanto has_more for true.
+Quando um item tiver "variations", apresente como um produto só e diga que existem
+outras cores/opções — nunca repita o mesmo produto uma vez por variação.
 ```
 
 ## Configuração (variáveis de ambiente)

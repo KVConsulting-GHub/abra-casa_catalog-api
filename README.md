@@ -69,6 +69,25 @@ Cada tom expande para os nomes de cor reais do catálogo (ex.: `pastel` inclui `
 
 A resposta da busca é paginada: `total` informa quantos produtos casaram com a busca, `count` quantos vieram na página atual e `has_more` se ainda há resultados. Para a próxima página, repita a chamada somando `limit` ao `offset` (ex.: `?q=poltrona&limit=5&offset=5`).
 
+### Variações de produto (cor, acabamento)
+
+Muitos produtos existem no feed como um SKU por cor/acabamento (ex.: a mesma cadeira em 7 cores). A busca agrupa esses SKUs automaticamente pelo nome base do produto — cada resultado representa **um produto**, e as demais opções aparecem dentro de `variations`:
+
+```json
+{
+  "sku_id": "2000217",
+  "name": "Cadeira Eames Eiffel Base Madeira - Branco",
+  "color": "branca",
+  "product_url": "https://www.abracasa.com.br/cadeira-eames-eiffel-base-madeira-branca/p?idsku=2000217",
+  "variations": [
+    { "sku_id": "2000218", "name": "Cadeira Eames Eiffel Base Madeira - Preto", "color": "preto", "product_url": "..." },
+    { "sku_id": "2005787", "name": "Cadeira Eames Eiffel Base Madeira - Azul", "color": "azul", "product_url": "..." }
+  ]
+}
+```
+
+`variations` só aparece quando existe mais de uma opção — um produto sem variações não ganha esse campo, mantendo a resposta idêntica à de antes. O agrupamento é feito por heurística de nome (o texto antes do último " - " no título, combinado com categoria e marca), já que os feeds atuais não expõem um ID de produto-pai confiável entre variações — nem a Cadabra (o campo não existe) nem a Abra Casa (o campo existe, mas vem único por SKU, não compartilhado entre as cores). Como todo agrupamento por heurística de texto, pode ocasionalmente juntar produtos parecidos que não são a mesma peça, ou deixar de juntar uma variação com título fora do padrão "Nome - Cor". A lógica está em `variantGroupKey`, em `src/catalog.js`.
+
 ## Uso no n8n
 
 No nó HTTP Request da ferramenta do agente:
@@ -78,7 +97,7 @@ GET https://catalogo.seudominio.com/catalog/search?q={{ termo }}&category={{ cat
 Authorization: Bearer {{ sua_chave }}
 ```
 
-Instrua o agente: use esta ferramenta para localizar produtos e identifique o `sku_id`; em seguida, consulte a VTEX para informar preço, estoque, prazo ou condições comerciais. Não apresente dados comerciais vindos desta API. Se o cliente pedir mais opções da mesma busca, repita a chamada somando `limit` ao `offset` para trazer produtos ainda não mostrados.
+Instrua o agente: use esta ferramenta para localizar produtos e identifique o `sku_id`; em seguida, consulte a VTEX para informar preço, estoque, prazo ou condições comerciais. Não apresente dados comerciais vindos desta API. Se o cliente pedir mais opções da mesma busca, repita a chamada somando `limit` ao `offset` para trazer produtos ainda não mostrados. Quando um item tiver `variations`, apresente como um produto só, mencionando que existem outras cores/opções — não repita o mesmo produto uma vez por variação.
 
 ## Links de produto
 

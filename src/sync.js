@@ -15,13 +15,14 @@ async function replaceSource(client, source, products) {
   await client.query("UPDATE catalog_products SET active = false WHERE source = $1", [source]);
   for (const p of products) {
     await client.query(`INSERT INTO catalog_products
-      (id,source,sku_id,item_group_id,name,description,brand,category,color,gtin,mpn,product_url,image_url,search_document,search_vector,active,updated_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,to_tsvector('portuguese',$14),true,NOW())
+      (id,source,sku_id,item_group_id,name,description,brand,category,color,gtin,mpn,product_url,image_url,variant_group,search_document,search_vector,active,updated_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,to_tsvector('portuguese',$15),true,NOW())
       ON CONFLICT (id) DO UPDATE SET
       item_group_id=EXCLUDED.item_group_id,name=EXCLUDED.name,description=EXCLUDED.description,brand=EXCLUDED.brand,
       category=EXCLUDED.category,color=EXCLUDED.color,gtin=EXCLUDED.gtin,mpn=EXCLUDED.mpn,product_url=EXCLUDED.product_url,
-      image_url=EXCLUDED.image_url,search_document=EXCLUDED.search_document,search_vector=EXCLUDED.search_vector,active=true,updated_at=NOW()`,
-      [p.id,p.source,p.sku_id,p.item_group_id,p.name,p.description,p.brand,p.category,p.color,p.gtin,p.mpn,p.product_url,p.image_url,p.search_document]);
+      image_url=EXCLUDED.image_url,variant_group=EXCLUDED.variant_group,search_document=EXCLUDED.search_document,
+      search_vector=EXCLUDED.search_vector,active=true,updated_at=NOW()`,
+      [p.id,p.source,p.sku_id,p.item_group_id,p.name,p.description,p.brand,p.category,p.color,p.gtin,p.mpn,p.product_url,p.image_url,p.variant_group,p.search_document]);
   }
 }
 

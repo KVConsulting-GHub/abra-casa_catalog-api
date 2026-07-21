@@ -54,6 +54,30 @@ function productUrl(value, siteUrl) {
   }
 }
 
+function stripAccents(value) {
+  return value.normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+// Os feeds não trazem um id de produto-pai confiável (ver variantGroup),
+// então usamos o padrão de título mais comum da VTEX: "Nome do produto -
+// Variação" (cor, acabamento etc.). Produtos sem esse separador ficam
+// sozinhos no próprio grupo.
+function baseName(name) {
+  const idx = name.lastIndexOf(" - ");
+  return idx === -1 ? name : name.slice(0, idx).trim();
+}
+
+// Agrupa variações (cor, acabamento) do mesmo produto. O item_group_id da
+// VTEX existe no feed da Abra Casa mas vem único por SKU (não liga
+// variações entre si) e a Cadabra nem exporta o campo — por isso o
+// agrupamento usa nome base + categoria + marca como heurística.
+function variantGroupKey(product) {
+  const base = stripAccents(baseName(product.name).toLowerCase());
+  const category = stripAccents((product.category || "").toLowerCase());
+  const brand = stripAccents((product.brand || "").toLowerCase());
+  return `${product.source}|${base}|${category}|${brand}`;
+}
+
 function documentFor(product) {
   return [
     ["Produto", product.name], ["Descrição", product.description],
@@ -86,6 +110,7 @@ export function parseFeed(xml, source, siteUrl) {
     };
     if (ids.has(product.id)) continue;
     ids.add(product.id);
+    product.variant_group = variantGroupKey(product);
     product.search_document = documentFor(product);
     products.push(product);
   }
